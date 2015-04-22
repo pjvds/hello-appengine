@@ -3,30 +3,43 @@ package hello
 import (
 	"fmt"
 	"net/http"
-
-	"google.golang.org/appengine"
-	"google.golang.org/appengine/user"
+	"text/template"
 )
 
 func init() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", root)
+	http.HandleFunc("/sign", sign)
 }
 
-func handler(writer http.ResponseWriter, request *http.Request) {
-	context := appengine.NewContext(request)
-	currentUser := user.Current(context)
+func root(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, guestbookForm)
+}
 
-	if currentUser == nil {
-		url, err := user.LoginURL(context, request.URL.String())
-		if err != nil {
-			http.Error(writer, err.Error(), http.StatusInternalServerError)
-			return
-		}
+const guestbookForm = `
+<html>
+  <body>
+    <form action="/sign" method="post">
+      <div><textarea name="content" rows="3" cols="60"></textarea></div>
+      <div><input type="submit" value="Sign Guestbook"></div>
+    </form>
+  </body>
+</html>
+`
 
-		writer.Header().Set("Location", url)
-		writer.WriteHeader(http.StatusFound)
-		return
+func sign(w http.ResponseWriter, r *http.Request) {
+	err := signTemplate.Execute(w, r.FormValue("content"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
-	fmt.Fprintf(writer, "Hello, %v!", currentUser)
 }
+
+var signTemplate = template.Must(template.New("sign").Parse(signTemplateHTML))
+
+const signTemplateHTML = `
+<html>
+  <body>
+    <p>You wrote:</p>
+    <pre>{{.}}</pre>
+  </body>
+</html>
+`
