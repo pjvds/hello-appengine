@@ -1,14 +1,14 @@
 package hello
 
 import (
-    "fmt"
-    "net/http"
+	"fmt"
+	"net/http"
 )
 
 func init() {
-    http.HandleFunc("/", handler)
+	http.HandleFunc("/", handler)
 }
 
 func handler(writer http.ResponseWriter, request *http.Request) {
-    fmt.Fprintf(writer, "Hello, World!")
+	fmt.Fprintf(writer, "Hello, World! Have you seen the hot-reload yet?")
 }
